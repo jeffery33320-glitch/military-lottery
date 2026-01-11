@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>國軍抽籤模擬系統</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #1d3557, #457b9d);
+    color: white;
+    text-align: center;
+    padding-top: 60px;
+}
+
+.box {
+    background: rgba(0,0,0,0.4);
+    width: 380px;
+    margin: auto;
+    padding: 30px;
+    border-radius: 15px;
+}
+
+button {
+    padding: 12px 28px;
+    font-size: 16px;
+    margin-top: 20px;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+}
+
+#result {
+    font-size: 26px;
+    margin-top: 30px;
+    height: 40px;
+}
+
+.spin {
+    animation: spin 0.15s infinite;
+}
+
+@keyframes spin {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0); }
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+    <h2>🇹🇼 國軍抽籤模擬系統</h2>
+    <p>模擬國軍兵種抽籤結果</p>
+
+    <button onclick="startDraw()">開始抽籤</button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+const jobs = [
+    { name: "陸軍", url: "https://rdrc.mnd.gov.tw/" },
+    { name: "海軍", url: "https://rdrc.mnd.gov.tw/" },
+    { name: "海軍陸戰隊", url: "https://rdrc.mnd.gov.tw/" }
+];
+
+let drawing = false;
+
+function startDraw() {
+    if (drawing) return;
+    drawing = true;
+
+    const resultDiv = document.getElementById("result");
+    resultDiv.classList.add("spin");
+
+    let count = 0;
+    const interval = setInterval(() => {
+        const temp = jobs[Math.floor(Math.random() * jobs.length)];
+        resultDiv.innerText = temp.name;
+        count++;
+
+        if (count > 15) {
+            clearInterval(interval);
+            resultDiv.classList.remove("spin");
+
+            const final = jobs[Math.floor(Math.random() * jobs.length)];
+            resultDiv.innerHTML = "🎖 抽中：<b>" + final.name + "</b>";
+
+            // 2 秒後自動跳轉
+            setTimeout(() => {
+                window.location.href = final.url;
+            }, 2000);
+
+            drawing = false;
+        }
+    }, 100);
+}
+</script>
+
+</body>
+</html>
