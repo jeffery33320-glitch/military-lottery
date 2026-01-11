@@ -8,77 +8,81 @@
 body {
     margin: 0;
     font-family: "Noto Sans TC", Arial, sans-serif;
-    background-color: #f4f6f3;
+    background-color: #f2f4f1;
 }
 
-/* 頂部橫幅 */
+/* 頂部 */
 header {
-    background-color: #2f3e2e;
+    background-color: #2b3a2e;
     color: white;
-    padding: 18px;
+    padding: 20px;
     text-align: center;
-    font-size: 20px;
     letter-spacing: 2px;
 }
 
-/* 主體 */
+/* 主容器 */
 .container {
-    max-width: 520px;
+    max-width: 600px;
     margin: 40px auto;
     background: white;
-    padding: 30px;
+    padding: 35px;
     border-radius: 6px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    box-shadow: 0 3px 12px rgba(0,0,0,0.15);
 }
 
-/* 標題 */
 h2 {
-    color: #2f3e2e;
+    color: #2b3a2e;
     margin-bottom: 10px;
 }
 
-p {
-    line-height: 1.6;
-    font-size: 15px;
+.step {
+    margin-top: 25px;
+    display: none;
+}
+
+.step.active {
+    display: block;
 }
 
 /* 按鈕 */
 button {
-    width: 100%;
     background-color: #3a5a40;
     color: white;
     border: none;
     padding: 14px;
     font-size: 16px;
-    margin-top: 25px;
+    width: 100%;
     cursor: pointer;
+    margin-top: 20px;
 }
 
 button:hover {
     background-color: #344e41;
 }
 
+/* 進度條 */
+.progress {
+    background: #ddd;
+    height: 18px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+.bar {
+    height: 100%;
+    width: 0%;
+    background: #3a5a40;
+    transition: width 0.5s;
+}
+
 /* 結果框 */
-#resultBox {
-    margin-top: 30px;
-    padding: 18px;
-    background-color: #edf2ed;
+.result {
+    background: #edf2ed;
+    padding: 20px;
     border-left: 6px solid #3a5a40;
+    margin-top: 25px;
     font-size: 18px;
-    display: none;
-}
-
-/* 載入動畫 */
-.loading {
-    font-size: 16px;
-    color: #555;
-    animation: blink 1.2s infinite;
-}
-
-@keyframes blink {
-    0% { opacity: 0.3; }
-    50% { opacity: 1; }
-    100% { opacity: 0.3; }
 }
 
 /* 頁尾 */
@@ -86,7 +90,7 @@ footer {
     text-align: center;
     font-size: 13px;
     color: #666;
-    margin-top: 50px;
+    margin: 50px 0 20px;
 }
 </style>
 </head>
@@ -94,19 +98,42 @@ footer {
 <body>
 
 <header>
-    中華民國國軍｜役男兵種抽籤模擬系統
+    中華民國國軍｜兵種抽籤模擬系統
 </header>
 
 <div class="container">
-    <h2>兵種分發抽籤</h2>
-    <p>
-        本系統為模擬國軍役男兵種分發流程之示意網站，  
-        透過隨機方式抽取兵種結果，僅供學術與教學用途參考。
-    </p>
 
-    <button onclick="startDraw()">開始進行抽籤</button>
+    <!-- STEP 1 -->
+    <div class="step active" id="step1">
+        <h2>使用前聲明</h2>
+        <p>
+            本系統為模擬國軍兵種分發流程之教學示意網站，  
+            抽籤結果不具任何實際法律或行政效力。
+        </p>
+        <button onclick="nextStep(2)">我已了解，開始模擬</button>
+    </div>
 
-    <div id="resultBox"></div>
+    <!-- STEP 2 -->
+    <div class="step" id="step2">
+        <h2>抽籤作業進行中</h2>
+        <p>系統正在進行兵種分發模擬，請勿重新整理頁面。</p>
+
+        <div class="progress">
+            <div class="bar" id="bar"></div>
+        </div>
+
+        <p id="statusText">初始化系統中…</p>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step" id="step3">
+        <h2>兵種分發結果</h2>
+
+        <div class="result" id="resultBox"></div>
+
+        <button onclick="restart()">重新模擬一次</button>
+    </div>
+
 </div>
 
 <footer>
@@ -120,24 +147,57 @@ const branches = [
     { name: "海軍陸戰隊", url: "https://rdrc.mnd.gov.tw/" }
 ];
 
-function startDraw() {
-    const box = document.getElementById("resultBox");
-    box.style.display = "block";
-    box.innerHTML = "<span class='loading'>系統處理中，請稍候…</span>";
+function nextStep(step) {
+    document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
+    document.getElementById("step" + step).classList.add("active");
+
+    if (step === 2) startProcess();
+}
+
+function startProcess() {
+    const bar = document.getElementById("bar");
+    const status = document.getElementById("statusText");
+    let progress = 0;
+
+    const texts = [
+        "讀取役男資料中…",
+        "確認兵種需求名額…",
+        "執行隨機分發演算法…",
+        "驗證分發結果…"
+    ];
+
+    const interval = setInterval(() => {
+        progress += 25;
+        bar.style.width = progress + "%";
+        status.innerText = texts[Math.floor(progress / 25) - 1];
+
+        if (progress >= 100) {
+            clearInterval(interval);
+            setTimeout(showResult, 800);
+        }
+    }, 900);
+}
+
+function showResult() {
+    nextStep(3);
+
+    const result = branches[Math.floor(Math.random() * branches.length)];
+    const code = "MND-" + Math.floor(Math.random() * 900000 + 100000);
+
+    document.getElementById("resultBox").innerHTML = `
+        分發編號：<b>${code}</b><br><br>
+        您本次模擬抽籤之兵種為：<br>
+        <strong style="font-size:24px;">${result.name}</strong><br><br>
+        系統將自動導向相關報名資訊頁面。
+    `;
 
     setTimeout(() => {
-        const result = branches[Math.floor(Math.random() * branches.length)];
-        box.innerHTML = `
-            <b>分發結果：</b><br>
-            您本次抽籤結果為：<strong>${result.name}</strong><br><br>
-            系統將自動導向相關報名資訊頁面。
-        `;
+        window.location.href = result.url;
+    }, 4000);
+}
 
-        setTimeout(() => {
-            window.location.href = result.url;
-        }, 2500);
-
-    }, 2000);
+function restart() {
+    location.reload();
 }
 </script>
 
