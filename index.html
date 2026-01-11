@@ -11,32 +11,37 @@ body {
     background-color: #f2f4f1;
 }
 
-/* 頂部 */
+/* Header */
 header {
-    background-color: #2b3a2e;
+    background-color: #263a29;
     color: white;
-    padding: 20px;
+    padding: 22px;
     text-align: center;
     letter-spacing: 2px;
+    font-size: 20px;
 }
 
-/* 主容器 */
+/* Main container */
 .container {
-    max-width: 600px;
+    max-width: 680px;
     margin: 40px auto;
     background: white;
-    padding: 35px;
+    padding: 40px;
     border-radius: 6px;
-    box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.18);
 }
 
 h2 {
-    color: #2b3a2e;
-    margin-bottom: 10px;
+    color: #263a29;
+    margin-bottom: 12px;
+}
+
+p {
+    line-height: 1.7;
+    font-size: 15px;
 }
 
 .step {
-    margin-top: 25px;
     display: none;
 }
 
@@ -44,7 +49,7 @@ h2 {
     display: block;
 }
 
-/* 按鈕 */
+/* Buttons */
 button {
     background-color: #3a5a40;
     color: white;
@@ -53,44 +58,44 @@ button {
     font-size: 16px;
     width: 100%;
     cursor: pointer;
-    margin-top: 20px;
+    margin-top: 25px;
 }
 
 button:hover {
     background-color: #344e41;
 }
 
-/* 進度條 */
+/* Progress */
 .progress {
     background: #ddd;
     height: 18px;
     border-radius: 10px;
     overflow: hidden;
-    margin-top: 20px;
+    margin-top: 25px;
 }
 
 .bar {
     height: 100%;
     width: 0%;
     background: #3a5a40;
-    transition: width 0.5s;
+    transition: width 0.6s;
 }
 
-/* 結果框 */
+/* Result box */
 .result {
     background: #edf2ed;
-    padding: 20px;
+    padding: 25px;
     border-left: 6px solid #3a5a40;
     margin-top: 25px;
     font-size: 18px;
 }
 
-/* 頁尾 */
+/* Footer */
 footer {
     text-align: center;
     font-size: 13px;
     color: #666;
-    margin: 50px 0 20px;
+    margin: 60px 0 25px;
 }
 </style>
 </head>
@@ -98,40 +103,50 @@ footer {
 <body>
 
 <header>
-    中華民國國軍｜兵種抽籤模擬系統
+    中華民國國軍｜役男兵種抽籤模擬系統
 </header>
 
 <div class="container">
 
     <!-- STEP 1 -->
     <div class="step active" id="step1">
-        <h2>使用前聲明</h2>
+        <h2>系統使用說明</h2>
         <p>
-            本系統為模擬國軍兵種分發流程之教學示意網站，  
-            抽籤結果不具任何實際法律或行政效力。
+            本系統為模擬國軍役男兵種分發作業流程之教學網站，  
+            透過隨機分配與名額比例演算法，  
+            協助理解兵役分發制度之運作方式。
         </p>
-        <button onclick="nextStep(2)">我已了解，開始模擬</button>
+        <p><b>本系統不具任何實際法律或行政效力。</b></p>
+        <button onclick="goStep(2)">我已了解，開始模擬</button>
     </div>
 
     <!-- STEP 2 -->
     <div class="step" id="step2">
-        <h2>抽籤作業進行中</h2>
-        <p>系統正在進行兵種分發模擬，請勿重新整理頁面。</p>
-
-        <div class="progress">
-            <div class="bar" id="bar"></div>
-        </div>
-
-        <p id="statusText">初始化系統中…</p>
+        <h2>資料確認</h2>
+        <p>系統已完成役男基本資料檢核：</p>
+        <ul>
+            <li>役男身分：一般役男</li>
+            <li>抽籤年度：113 年度（模擬）</li>
+            <li>分發方式：隨機抽籤</li>
+        </ul>
+        <button onclick="goStep(3)">確認資料，進行抽籤</button>
     </div>
 
     <!-- STEP 3 -->
     <div class="step" id="step3">
+        <h2>抽籤運算中</h2>
+        <p id="status">系統初始化中…</p>
+
+        <div class="progress">
+            <div class="bar" id="bar"></div>
+        </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="step" id="step4">
         <h2>兵種分發結果</h2>
-
         <div class="result" id="resultBox"></div>
-
-        <button onclick="restart()">重新模擬一次</button>
+        <button onclick="restart()">重新進行模擬</button>
     </div>
 
 </div>
@@ -141,59 +156,65 @@ footer {
 </footer>
 
 <script>
-const branches = [
-    { name: "陸軍", url: "https://rdrc.mnd.gov.tw/" },
-    { name: "海軍", url: "https://rdrc.mnd.gov.tw/" },
-    { name: "海軍陸戰隊", url: "https://rdrc.mnd.gov.tw/" }
+// 名額比例（更真實）
+const pool = [
+    { name: "陸軍", weight: 50, url: "https://rdrc.mnd.gov.tw/" },
+    { name: "海軍", weight: 30, url: "https://rdrc.mnd.gov.tw/" },
+    { name: "海軍陸戰隊", weight: 20, url: "https://rdrc.mnd.gov.tw/" }
 ];
 
-function nextStep(step) {
+function goStep(step) {
     document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
     document.getElementById("step" + step).classList.add("active");
 
-    if (step === 2) startProcess();
+    if (step === 3) startDraw();
 }
 
-function startProcess() {
+function startDraw() {
     const bar = document.getElementById("bar");
-    const status = document.getElementById("statusText");
+    const status = document.getElementById("status");
     let progress = 0;
 
     const texts = [
-        "讀取役男資料中…",
-        "確認兵種需求名額…",
+        "載入分發名額資料…",
+        "計算兵種需求比例…",
         "執行隨機分發演算法…",
         "驗證分發結果…"
     ];
 
-    const interval = setInterval(() => {
+    const timer = setInterval(() => {
         progress += 25;
         bar.style.width = progress + "%";
-        status.innerText = texts[Math.floor(progress / 25) - 1];
+        status.innerText = texts[progress / 25 - 1];
 
         if (progress >= 100) {
-            clearInterval(interval);
-            setTimeout(showResult, 800);
+            clearInterval(timer);
+            setTimeout(showResult, 1000);
         }
-    }, 900);
+    }, 1000);
 }
 
 function showResult() {
-    nextStep(3);
+    goStep(4);
 
-    const result = branches[Math.floor(Math.random() * branches.length)];
-    const code = "MND-" + Math.floor(Math.random() * 900000 + 100000);
+    const expanded = [];
+    pool.forEach(p => {
+        for (let i = 0; i < p.weight; i++) expanded.push(p);
+    });
+
+    const result = expanded[Math.floor(Math.random() * expanded.length)];
+    const code = "MND-" + new Date().getTime().toString().slice(-6);
 
     document.getElementById("resultBox").innerHTML = `
-        分發編號：<b>${code}</b><br><br>
-        您本次模擬抽籤之兵種為：<br>
-        <strong style="font-size:24px;">${result.name}</strong><br><br>
+        分發序號：<b>${code}</b><br><br>
+        本次模擬抽籤分發兵種為：<br>
+        <strong style="font-size:26px;">${result.name}</strong><br><br>
         系統將自動導向相關報名資訊頁面。
     `;
 
     setTimeout(() => {
         window.location.href = result.url;
-    }, 4000);
+    }, 5000);
 }
 
 function restart() {
